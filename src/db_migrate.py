@@ -5,19 +5,22 @@ import configparser as cp
 
 def get_connection():
     try:
+        config_section = "db_connection"
         config = cp.ConfigParser()
-        config.read('src\settings.ini')
-        return psycopg2.connect(user=config['dest_database']['user'],
-                                password=config['dest_database']['password'],
-                                host=config['dest_database']['host'],
-                                port=config['dest_database']['port'],
-                                database=config['dest_database']['database'])
+        config.read("src\settings.ini")
+        return psycopg2.connect(
+            user=config[config_section]["user"],
+            password=config[config_section]["password"],
+            host=config[config_section]["host"],
+            port=config[config_section]["port"],
+            database=config[config_section]["database"],
+        )
     except Exception as error:
         print("Connection failed", error)
 
 
 def execute_scripts():
-    table_path = r'migrate_scripts\tables'
+    table_path = r"migrate_scripts\tables"
     table_list = os.listdir(table_path)
     # fkey_path = r'migrate_scripts\foreignkey'
     # if os.path.isdir(fkey_path):
@@ -28,7 +31,7 @@ def execute_scripts():
     cursor = connection.cursor()
 
     for table in table_list:
-        tbl_file = open(os.path.join(table_path, table), 'r')
+        tbl_file = open(os.path.join(table_path, table), "r")
         tbl_script = tbl_file.read()
         cursor.execute(tbl_script)
 
@@ -41,5 +44,5 @@ def execute_scripts():
     connection.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     execute_scripts()
