@@ -21,7 +21,10 @@ def compare_src_to_dest():
         print("Create schema")
 
     if dest_snapshot.tables.__len__() == 0:
-        shutil.copytree(r"schema\\tables", r"migrate_scripts\\tables")
+        shutil.copytree(
+            r"{schema}\\tables".format(schema=src_snapshot.schema),
+            r"migrate_scripts\\tables",
+        )
         print("Create all tables")
         return
 

@@ -124,7 +124,7 @@ def get_snapshot():
     index_schema = __get_index_schema()
     function_schema = __get_function_schema()
     if tbl_schema.__len__() == 0:
-        return Snapshot.Snap("public", [])
+        return Snapshot.Snap("public", [], [])
     schema_list = list(set(map(lambda x: x[0], tbl_schema)))
     snap_shot = Snapshot.Snap(
         schema_list[0],

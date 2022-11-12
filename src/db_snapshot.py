@@ -13,7 +13,6 @@ def get_table_indexes(index_list):
 def get_table_key_constraints(key_list):
     key_str = ""
     for key in key_list:
-        # if key.constraint_type != 'FOREIGN KEY':
         key_str += key.constraint_def + ",\n\t"
     return key_str
 
@@ -78,7 +77,9 @@ def create_table_schema(schema, table):
     max_type_length = len(max(list(map(lambda x: x.data_type, column_list)), key=len))
     for column in column_list:
         column_script += create_table_column(column, max_col_length, max_type_length)
-    key_script = get_table_key_constraints(table.constraints)
+    key_script = get_table_key_constraints(
+        list(filter(lambda x: x.constraint_type != "FOREIGN KEY", table.constraints))
+    )
     index_script = get_table_indexes(table.indexes)
     table_script = template.CREATE_TABLE.format(
         schema=schema,
@@ -93,13 +94,21 @@ def create_schema_script():
     sh.generate_snap()
     sh_file = open(r"snapshot\snap.json", "r")
     snapshot = sh.snapshot_from_dict(json.loads(sh_file.read()))
-
+    constrains = ""
     for table in snapshot.tables:
         table_script = create_table_schema(snapshot.schema, table)
         table_file = open(
             r"{0}\tables\{1}.sql".format(snapshot.schema, table.table_name), "w"
         )
         table_file.write(table_script)
+        for key in table.constraints:
+            if key.constraint_type == "FOREIGN KEY":
+                constrains += template.ADD_CONSTRAINT.format(
+                    table_name=table.table_name, constraint_def=key.constraint_def
+                )
+    if constrains != "":
+        constraint_file = open(r"{0}\constraints\keys.sql".format(snapshot.schema), "w")
+        constraint_file.write(constrains)
 
     for function in snapshot.functions:
         function_file = open(

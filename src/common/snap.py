@@ -52,7 +52,14 @@ class Function:
     function_arguments: str
     return_type: str
 
-    def __init__(self, function_name: str, function_language: str, function_def: str, function_arguments: str, return_type: str) -> None:
+    def __init__(
+        self,
+        function_name: str,
+        function_language: str,
+        function_def: str,
+        function_arguments: str,
+        return_type: str,
+    ) -> None:
         self.function_name = function_name
         self.function_language = function_language
         self.function_def = function_def
@@ -60,14 +67,20 @@ class Function:
         self.return_type = return_type
 
     @staticmethod
-    def from_dict(obj: Any) -> 'Function':
+    def from_dict(obj: Any) -> "Function":
         assert isinstance(obj, dict)
         function_name = from_str(obj.get("function_name"))
         function_language = from_str(obj.get("function_language"))
         function_def = from_str(obj.get("function_def"))
         function_arguments = from_str(obj.get("function_arguments"))
         return_type = from_str(obj.get("return_type"))
-        return Function(function_name, function_language, function_def, function_arguments, return_type)
+        return Function(
+            function_name,
+            function_language,
+            function_def,
+            function_arguments,
+            return_type,
+        )
 
     def to_dict(self) -> dict:
         result: dict = {}
@@ -94,7 +107,17 @@ class Column:
     is_nullable: IsNullable
     ordinal_position: int
 
-    def __init__(self, column_name: str, data_type: str, character_maximum_length: Optional[int], numeric_precision: Optional[int], numeric_scale: Optional[int], column_default: Optional[str], is_nullable: IsNullable, ordinal_position: int) -> None:
+    def __init__(
+        self,
+        column_name: str,
+        data_type: str,
+        character_maximum_length: Optional[int],
+        numeric_precision: Optional[int],
+        numeric_scale: Optional[int],
+        column_default: Optional[str],
+        is_nullable: IsNullable,
+        ordinal_position: int,
+    ) -> None:
         self.column_name = column_name
         self.data_type = data_type
         self.character_maximum_length = character_maximum_length
@@ -105,26 +128,45 @@ class Column:
         self.ordinal_position = ordinal_position
 
     @staticmethod
-    def from_dict(obj: Any) -> 'Column':
+    def from_dict(obj: Any) -> "Column":
         assert isinstance(obj, dict)
         column_name = from_str(obj.get("column_name"))
         data_type = from_str(obj.get("data_type"))
-        character_maximum_length = from_union([from_none, from_int], obj.get("character_maximum_length"))
-        numeric_precision = from_union([from_none, from_int], obj.get("numeric_precision"))
+        character_maximum_length = from_union(
+            [from_none, from_int], obj.get("character_maximum_length")
+        )
+        numeric_precision = from_union(
+            [from_none, from_int], obj.get("numeric_precision")
+        )
         numeric_scale = from_union([from_none, from_int], obj.get("numeric_scale"))
         column_default = from_union([from_none, from_str], obj.get("column_default"))
         is_nullable = IsNullable(obj.get("is_nullable"))
         ordinal_position = from_int(obj.get("ordinal_position"))
-        return Column(column_name, data_type, character_maximum_length, numeric_precision, numeric_scale, column_default, is_nullable, ordinal_position)
+        return Column(
+            column_name,
+            data_type,
+            character_maximum_length,
+            numeric_precision,
+            numeric_scale,
+            column_default,
+            is_nullable,
+            ordinal_position,
+        )
 
     def to_dict(self) -> dict:
         result: dict = {}
         result["column_name"] = from_str(self.column_name)
         result["data_type"] = from_str(self.data_type)
-        result["character_maximum_length"] = from_union([from_none, from_int], self.character_maximum_length)
-        result["numeric_precision"] = from_union([from_none, from_int], self.numeric_precision)
+        result["character_maximum_length"] = from_union(
+            [from_none, from_int], self.character_maximum_length
+        )
+        result["numeric_precision"] = from_union(
+            [from_none, from_int], self.numeric_precision
+        )
         result["numeric_scale"] = from_union([from_none, from_int], self.numeric_scale)
-        result["column_default"] = from_union([from_none, from_str], self.column_default)
+        result["column_default"] = from_union(
+            [from_none, from_str], self.column_default
+        )
         result["is_nullable"] = to_enum(IsNullable, self.is_nullable)
         result["ordinal_position"] = from_int(self.ordinal_position)
         return result
@@ -139,7 +181,7 @@ class Constraint:
         self.constraint_def = constraint_def
 
     @staticmethod
-    def from_dict(obj: Any) -> 'Constraint':
+    def from_dict(obj: Any) -> "Constraint":
         assert isinstance(obj, dict)
         constraint_type = from_str(obj.get("constraint_type"))
         constraint_def = from_str(obj.get("constraint_def"))
@@ -161,7 +203,7 @@ class Index:
         self.indexdef = indexdef
 
     @staticmethod
-    def from_dict(obj: Any) -> 'Index':
+    def from_dict(obj: Any) -> "Index":
         assert isinstance(obj, dict)
         indexname = from_str(obj.get("indexname"))
         indexdef = from_str(obj.get("indexdef"))
@@ -180,14 +222,20 @@ class Table:
     constraints: List[Constraint]
     indexes: List[Index]
 
-    def __init__(self, table_name: str, columns: List[Column], constraints: List[Constraint], indexes: List[Index]) -> None:
+    def __init__(
+        self,
+        table_name: str,
+        columns: List[Column],
+        constraints: List[Constraint],
+        indexes: List[Index],
+    ) -> None:
         self.table_name = table_name
         self.columns = columns
         self.constraints = constraints
         self.indexes = indexes
 
     @staticmethod
-    def from_dict(obj: Any) -> 'Table':
+    def from_dict(obj: Any) -> "Table":
         assert isinstance(obj, dict)
         table_name = from_str(obj.get("table_name"))
         columns = from_list(Column.from_dict, obj.get("columns"))
@@ -199,7 +247,9 @@ class Table:
         result: dict = {}
         result["table_name"] = from_str(self.table_name)
         result["columns"] = from_list(lambda x: to_class(Column, x), self.columns)
-        result["constraints"] = from_list(lambda x: to_class(Constraint, x), self.constraints)
+        result["constraints"] = from_list(
+            lambda x: to_class(Constraint, x), self.constraints
+        )
         result["indexes"] = from_list(lambda x: to_class(Index, x), self.indexes)
         return result
 
@@ -209,13 +259,15 @@ class Snap:
     tables: List[Table]
     functions: List[Function]
 
-    def __init__(self, schema: str, tables: List[Table], functions: List[Function]) -> None:
+    def __init__(
+        self, schema: str, tables: List[Table], functions: List[Function]
+    ) -> None:
         self.schema = schema
         self.tables = tables
         self.functions = functions
 
     @staticmethod
-    def from_dict(obj: Any) -> 'Snap':
+    def from_dict(obj: Any) -> "Snap":
         assert isinstance(obj, dict)
         schema = from_str(obj.get("schema"))
         tables = from_list(Table.from_dict, obj.get("tables"))

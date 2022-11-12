@@ -1,18 +1,21 @@
-CREATE_TABLE = "CREATE TABLE {schema}.{table_name} ( \n{columns}\n\t{constraints}"
+CREATE_TABLE = "create table {schema}.{table_name} ( \n{columns}\n\t{constraints}"
 COLUMN = "\t{column_name} {type} {nullable} {default},\n"
-ALTER_ADD_COLUMN = "ALTER TABLE {table_name} ADD COLUMN {column_name} {data_type} {nullable} {default};\n"
+ALTER_ADD_COLUMN = "alter table {table_name} add column {column_name} {data_type} {nullable} {default};\n"
 ALTER_COLUMN_TYPE = (
-    "ALTER TABLE {table_name} ALTER COLUMN {column_name} TYPE {data_type};\n"
+    "alter table {table_name} alter column {column_name} TYPE {data_type};\n"
 )
 ALTER_COLUMN_NULL = (
-    "ALTER TABLE {table_name} ALTER COLUMN {column_name} {is_nullable};\n"
+    "alter table {table_name} alter column {column_name} {is_nullable};\n"
 )
 ALTER_COLUMN_DEFAULT = (
-    "ALTER TABLE {table_name} ALTER COLUMN {column_name} {default};\n"
+    "alter table {table_name} alter column {column_name} {default};\n"
 )
-DROP_COLUMN = "ALTER TABLE {table_name} DROP COLUMN {column_name};\n"
-DROP_TABLE = "DROP TABLE {table_name}; \n"
-DROP_FUNCTION = "DROP function {function_name}; \n"
+DROP_COLUMN = "alter table {table_name} drop column {column_name};\n"
+DROP_TABLE = "drop table {table_name}; \n"
+DROP_FUNCTION = "drop function {function_name}; \n"
+ADD_CONSTRAINT = (
+    "alter table {table_name} add {constraint_def};\n"
+)
 
 TABLE_SCHEMA_QUERY = (
     "select table_schema, table_name, column_name, data_type, character_maximum_length, numeric_precision, "
