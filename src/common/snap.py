@@ -92,11 +92,6 @@ class Function:
         return result
 
 
-class IsNullable(Enum):
-    NO = "NO"
-    YES = "YES"
-
-
 class Column:
     column_name: str
     data_type: str
@@ -104,7 +99,7 @@ class Column:
     numeric_precision: Optional[int]
     numeric_scale: Optional[int]
     column_default: Optional[str]
-    is_nullable: IsNullable
+    is_nullable: str
     ordinal_position: int
 
     def __init__(
@@ -115,7 +110,7 @@ class Column:
         numeric_precision: Optional[int],
         numeric_scale: Optional[int],
         column_default: Optional[str],
-        is_nullable: IsNullable,
+        is_nullable: str,
         ordinal_position: int,
     ) -> None:
         self.column_name = column_name
@@ -140,7 +135,7 @@ class Column:
         )
         numeric_scale = from_union([from_none, from_int], obj.get("numeric_scale"))
         column_default = from_union([from_none, from_str], obj.get("column_default"))
-        is_nullable = IsNullable(obj.get("is_nullable"))
+        is_nullable = from_str(obj.get("is_nullable"))
         ordinal_position = from_int(obj.get("ordinal_position"))
         return Column(
             column_name,
@@ -167,7 +162,7 @@ class Column:
         result["column_default"] = from_union(
             [from_none, from_str], self.column_default
         )
-        result["is_nullable"] = to_enum(IsNullable, self.is_nullable)
+        result["is_nullable"] = from_str(self.is_nullable)
         result["ordinal_position"] = from_int(self.ordinal_position)
         return result
 

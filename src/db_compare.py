@@ -1,3 +1,4 @@
+from functools import reduce
 import common.main as sh
 import json
 import shutil
@@ -6,7 +7,6 @@ import common.db_template as template
 
 
 def compare_src_to_dest():
-    migrate_str = ""
     if os.path.isdir(r"migrate_scripts"):
         shutil.rmtree("migrate_scripts")
     sh_file = open(r"snapshot\snap.json", "r")
@@ -25,14 +25,19 @@ def compare_src_to_dest():
             r"{schema}\\tables".format(schema=src_snapshot.schema),
             r"migrate_scripts\\tables",
         )
+        shutil.copytree(
+            r"{schema}\\constraints".format(schema=src_snapshot.schema),
+            r"migrate_scripts\\constraints",
+        )
         print("Create all tables")
         return
 
     if not os.path.isdir(r"migrate_scripts\tables"):
         os.makedirs(r"migrate_scripts\tables")
+        os.makedirs(r"migrate_scripts\constraints")
 
-    migrate_str += compare_tables(src_snapshot.tables, dest_snapshot.tables)
-    migrate_str += compare_function(src_snapshot.functions, dest_snapshot.functions)
+    compare_tables(src_snapshot.schema, src_snapshot.tables, dest_snapshot.tables)
+    compare_function(src_snapshot.functions, dest_snapshot.functions)
 
 
 def compare_function(src_functions, dest_functions):
@@ -58,31 +63,86 @@ def compare_function(src_functions, dest_functions):
     return function_str
 
 
-def compare_tables(src_tables, dest_tables):
-    table_str = ""
-    alter_str = ""
+def compare_tables(schema, src_tables, dest_tables):
+    constraint_str = ""
     for src_table in src_tables:
+        table_str = ""
+        alter_str = ""
         dest_table = list(
             filter(lambda x: x.table_name == src_table.table_name, dest_tables)
         )
+
         if not dest_table:
-            table_str += open(r"public\tables", src_table.table_name + ".sql")
-        else:
-            alter_str += compare_columns(
-                src_table.table_name, src_table.columns, dest_table[0].columns
+            shutil.copyfile(
+                r"{0}\tables\{1}.sql".format(schema, src_table.table_name),
+                r"migrate_scripts\tables\{1}.sql".format(schema, src_table.table_name),
             )
-            alter_str += compare_indexes(
-                src_table.table_name, src_table.indexes, dest_table[0].indexes
+            constraint_str += generate_foreignkey_script(
+                src_table.table_name, src_table.constraints, []
             )
-            if alter_str:
-                table_str += alter_str
-                index = dest_tables.index(dest_table[0])
-                dest_tables.pop(index)
+            continue
+
+        alter_str += compare_columns(
+            src_table.table_name, src_table.columns, dest_table[0].columns
+        )
+        alter_str += compare_indexes(
+            src_table.table_name, src_table.indexes, dest_table[0].indexes
+        )
+        constraint_str += generate_foreignkey_script(
+            src_table.table_name, src_table.constraints, dest_table[0].constraints
+        )
+        src_constraints = list(
+            filter(lambda x: x.constraint_type != "FOREIGN KEY", src_table.constraints)
+        )
+        des_constraints = list(
+            filter(
+                lambda x: x.constraint_type != "FOREIGN KEY", dest_table[0].constraints
+            )
+        )
+        alter_str += compare_constraints(
+            src_table.table_name, src_constraints, des_constraints
+        )
+
+        if alter_str:
+            table_str += alter_str
+            index = dest_tables.index(dest_table[0])
+            dest_tables.pop(index)
+        create_write_file(
+            r"migrate_scripts\tables\{1}.sql".format(schema, src_table.table_name),
+            table_str,
+        )
 
     for dest_table in dest_tables:
-        drop_str = template.DROP_TABLE.format(table_name=dest_table.table_name)
-        table_str += drop_str
-    return table_str
+        count = len(
+            list(filter(lambda x: x.table_name == dest_table.table_name, src_tables))
+        )
+        if count == 0:
+            drop_str = template.DROP_TABLE.format(table_name=dest_table.table_name)
+            table_str += drop_str
+        create_write_file(
+            r"migrate_scripts\tables\{1}.sql".format(schema, src_table.table_name),
+            table_str,
+        )
+    create_write_file(
+        r"migrate_scripts\constraints\keys.sql",
+        constraint_str,
+    )
+
+
+def create_write_file(filename_with_path, filedata):
+    if filedata != "":
+        table_file = open(filename_with_path, "w")
+        table_file.write(filedata)
+
+
+def generate_foreignkey_script(table_name, src_constraints, des_constraints):
+    src_constraints_list = list(
+        filter(lambda x: x.constraint_type == "FOREIGN KEY", src_constraints)
+    )
+    des_constraints_list = list(
+        filter(lambda x: x.constraint_type == "FOREIGN KEY", des_constraints)
+    )
+    return compare_constraints(table_name, src_constraints_list, des_constraints_list)
 
 
 def compare_columns(table_name, src_columns, dest_columns):
@@ -210,9 +270,23 @@ def drop_column(table_name, column):
 def compare_indexes(table_name, src_indexes, dest_indexes):
     alter_str = ""
     for src in src_indexes:
-        des_index = list(filter(lambda x: x.indexname == src.indexname))
+        des_index = list(filter(lambda x: x.indexname == src.indexname, dest_indexes))
         if not des_index:
             alter_str += src.indexdef
+    return alter_str
+
+
+def compare_constraints(table_name, src_constraints, dest_constraints):
+    alter_str = ""
+    for src in src_constraints:
+        dest_constraint = list(
+            filter(lambda x: x.constraint_def == src.constraint_def, dest_constraints)
+        )
+        if not dest_constraint:
+            alter_str += template.ADD_CONSTRAINT.format(
+                table_name=table_name, constraint_def=src.constraint_def
+            )
+    return alter_str
 
 
 if __name__ == "__main__":

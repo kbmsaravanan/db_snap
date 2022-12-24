@@ -26,14 +26,13 @@ TABLE_SCHEMA_QUERY = (
 )
 
 CONSTRAINT_SCHEMA_QUERY = (
-    "select c.table_schema, c.table_name, c.constraint_type, "
+    "select distinct c.table_schema, c.table_name, c.constraint_type, "
     "pg_catalog.pg_get_constraintdef(con.oid, true) constraint_def "
     "from pg_catalog.pg_constraint con "
     "join information_schema.table_constraints c on c.constraint_name = con.conname "
     "join information_schema.key_column_usage kcu on kcu.constraint_name = c.constraint_name "
     "where c.constraint_catalog = '{database}' and c.constraint_schema != 'pg_catalog' "
-    "and c.constraint_schema != 'information_schema' and kcu.constraint_catalog = '{database}' "
-    "order by kcu.table_schema, kcu.table_name, kcu.ordinal_position;"
+    "and c.constraint_schema != 'information_schema' and kcu.constraint_catalog = '{database}'; "
 )
 
 INDEX_SCHEMA_QUERY = (

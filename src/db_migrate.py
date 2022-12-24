@@ -22,11 +22,11 @@ def get_connection():
 def execute_scripts():
     table_path = r"migrate_scripts\tables"
     table_list = os.listdir(table_path)
-    # fkey_path = r'migrate_scripts\foreignkey'
-    # if os.path.isdir(fkey_path):
-    #     fkey_list = os.listdir(fkey_path)
-    # else:
-    #     fkey_list = []
+    fkey_path = r'migrate_scripts\constraints'
+    if os.path.isdir(fkey_path):
+        fkey_list = os.listdir(fkey_path)
+    else:
+        fkey_list = []
     connection = get_connection()
     cursor = connection.cursor()
 
@@ -35,10 +35,10 @@ def execute_scripts():
         tbl_script = tbl_file.read()
         cursor.execute(tbl_script)
 
-    # for fkey in fkey_list:
-    #     fkey_file = open(os.path.join(fkey_path, fkey), 'r')
-    #     fkey_script = fkey_file.read()
-    #     cursor.execute(fkey_script)
+    for fkey in fkey_list:
+        fkey_file = open(os.path.join(fkey_path, fkey), 'r')
+        fkey_script = fkey_file.read()
+        cursor.execute(fkey_script)
 
     connection.commit()
     connection.close()
